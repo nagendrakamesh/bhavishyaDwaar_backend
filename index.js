@@ -61,8 +61,22 @@ app.post('/jobsPosted', async(req,res) => {
 });
 
 
-app.get('/jobs', async(req,res) => {
+app.get('/jobs/:comp', async(req,res) => {
+    // console.log(req.params.comp);
+    const jobs = await JobsPosted.find({name:req.params.comp});
+    
+    if(jobs.length > 0){
+        res.send(jobs);
+    }
+    else{
+        res.send({result : "No jobs found"});
+    }
+});
+
+
+app.get('/studjobs', async(req,res) => {
     const jobs = await JobsPosted.find();
+    
     if(jobs.length > 0){
         res.send(jobs);
     }
@@ -95,6 +109,41 @@ const updateStudent = async (_id, name1, email1, phone1, roll1, password1) => {
                 email : email1,
                 phone : phone1,
                 roll : roll1,
+                password : password1
+            }
+        });
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+}
+
+
+app.post('/companyedit', async(req, res) => {
+    
+    const _id = req.body._id;
+    const name = req.body.name;
+    const email = req.body.email;
+    const phone = req.body.phone;
+    const logo = req.body.logo;
+    const location = req.body.location;
+    const password = req.body.password;
+
+
+    updateCompany(_id, name, email, phone, location, logo, password);
+
+});
+
+const updateCompany = async (_id, name1, email1, phone1, location1, logo1, password1) => {
+    try{
+        await Company.updateOne({_id}, {
+            $set : {
+                name : name1,
+                email : email1,
+                phone : phone1,
+                logo : logo1,
+                location : location1,
                 password : password1
             }
         });
