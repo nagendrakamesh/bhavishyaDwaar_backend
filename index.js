@@ -11,6 +11,8 @@ const Company = require('./db/Companies');
 
 const JobsPosted = require('./db/JobsPosted');
 
+const AppliedJobs = require('./db/AppliedJobs');
+
 
 app.use(express.json());
 app.use(cors());
@@ -218,5 +220,25 @@ const editCompPswd = async (_id, password1) => {
     }
 }
 
+
+// FETCHING COMPANY DETAILS FOR COMPANY LIST
+app.get('/companylist', async(req, res) => {
+        const CompList = await Company.find();
+        if (CompList.length > 0){
+            res.send(CompList);
+        }
+        else{
+            res.send("Companies not found!");
+        }
+})
+
+
+// POSTING JOB ID TO APPLIED JOBS IN DATABASE
+app.post('/appliedJobs', async(req, res) => {
+    let user = new AppliedJobs(req.body);
+    let result = await user.save();
+    result = result.toObject();
+    res.send(result);
+})
 
 app.listen(port);
