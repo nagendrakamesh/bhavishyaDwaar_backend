@@ -15,6 +15,8 @@ const JobsPosted = require('./db/JobsPosted');
 app.use(express.json());
 app.use(cors());
 
+
+// POSTING STUDENT DETAILS FROM STUDENT REGISTER PAGE TO THE DATABASE
 app.post('/registerStudent', async(req,res) => {
     let user = new Student(req.body);
     let result = await user.save();
@@ -24,6 +26,7 @@ app.post('/registerStudent', async(req,res) => {
 });
 
 
+// POSTING COMPANY DETAILS FROM COMPANY REGISTER PAGE TO THE DATABASE
 app.post('/registerCompany', async(req,res) => {
     let user = new Company(req.body);
     let result = await user.save();
@@ -33,6 +36,7 @@ app.post('/registerCompany', async(req,res) => {
 });
 
 
+// LOGIN BACKEND FUNCTIONALITY
 app.post('/login', async(req, res) => {
     if(req.body.password && req.body.email){
     let user = await Student.findOne(req.body).select("-password");
@@ -53,6 +57,7 @@ app.post('/login', async(req, res) => {
 });
 
 
+// POSTING THE JOBS FROM COMPANY ADD JOBS TO THE DATABASE
 app.post('/jobsPosted', async(req,res) => {
     let user = new JobsPosted(req.body);
     let result = await user.save();
@@ -61,8 +66,8 @@ app.post('/jobsPosted', async(req,res) => {
 });
 
 
+// FETCHING THE JOBS THAT THE COMPANY ADDED
 app.get('/jobs/:comp', async(req,res) => {
-    // console.log(req.params.comp);
     const jobs = await JobsPosted.find({name:req.params.comp});
     
     if(jobs.length > 0){
@@ -74,6 +79,7 @@ app.get('/jobs/:comp', async(req,res) => {
 });
 
 
+// FETCHING ALL THE JOBS POSTED FOR THE STUDENTS ON THE PLATFORM
 app.get('/studjobs', async(req,res) => {
     const jobs = await JobsPosted.find();
     
@@ -87,20 +93,22 @@ app.get('/studjobs', async(req,res) => {
 
 
 
+// EDITING AND UPDATING THE STUDENT DETAILS 
 app.post('/studentedit', async(req, res) => {
     
     const _id = req.body._id;
     const name = req.body.name;
     const email = req.body.email;
     const phone = req.body.phone;
-    const roll = req.body.roll;
-    const password = req.body.password;
+    const rollno = req.body.rollno;
+    // const password = req.body.password;
 
 
-    updateStudent(_id, name, email, phone, roll, password);
+    updateStudent(_id, name, email, phone, rollno);
 
 });
 
+// FUNCTION FOR UPDATING STUDENT DETAILS
 const updateStudent = async (_id, name1, email1, phone1, roll1, password1) => {
     try{
         await Student.updateOne({_id}, {
@@ -108,8 +116,8 @@ const updateStudent = async (_id, name1, email1, phone1, roll1, password1) => {
                 name : name1,
                 email : email1,
                 phone : phone1,
-                roll : roll1,
-                password : password1
+                rollno : roll1
+                // password : password1
             }
         });
         
@@ -120,6 +128,7 @@ const updateStudent = async (_id, name1, email1, phone1, roll1, password1) => {
 }
 
 
+// EDITING AND UPDATING THE COMPANY DETAILS 
 app.post('/companyedit', async(req, res) => {
     
     const _id = req.body._id;
@@ -135,6 +144,7 @@ app.post('/companyedit', async(req, res) => {
 
 });
 
+// FUNCTION FOR UPDATING COMPANY DETAILS
 const updateCompany = async (_id, name1, email1, phone1, location1, logo1, password1) => {
     try{
         await Company.updateOne({_id}, {
@@ -153,5 +163,60 @@ const updateCompany = async (_id, name1, email1, phone1, location1, logo1, passw
         console.log(err);
     }
 }
+
+
+// EDITING AND UPDATING THE STUDENT PASSWORD 
+app.post('/editstudpswd', async(req, res) => {
+    
+    const _id = req.body._id;
+    const password = req.body.password;
+
+
+    editStudPswd(_id, password);
+
+});
+
+// FUNCTION FOR UPDATING STUDENT PASSWORD
+const editStudPswd = async (_id, password1) => {
+    try{
+        await Student.updateOne({_id}, {
+            $set : {
+                password : password1
+            }
+        });
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+}
+
+
+// EDITING AND UPDATING THE COMPANY PASSWORD 
+app.post('/editcomppswd', async(req, res) => {
+    
+    const _id = req.body._id;
+    const password = req.body.password;
+
+
+    editCompPswd(_id, password);
+
+});
+
+// FUNCTION FOR UPDATING COMPANY PASSWORD
+const editCompPswd = async (_id, password1) => {
+    try{
+        await Company.updateOne({_id}, {
+            $set : {
+                password : password1
+            }
+        });
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+}
+
 
 app.listen(port);
