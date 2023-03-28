@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const cors = require("cors");
 require('./db/config');
@@ -240,5 +241,42 @@ app.post('/appliedJobs', async(req, res) => {
     result = result.toObject();
     res.send(result);
 })
+
+
+// APPEND STUDENT ID TO APPLIED JOBM
+app.post('/studentapply', async(req, res) => {
+    const id = req.body.jid;
+    const sid = req.body.sid;
+
+    try{
+        await AppliedJobs.findOneAndUpdate({jobid : id}, {
+            $push : {students : sid}
+        }, {new : true}, (err, doc) => {
+            if(err){
+                throw(err);
+            }
+            else{
+                res.json(doc);
+            }
+        })   
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+// app.get('/jobs/:applied', async(req,res) => {
+//     const applied_jobs = await AppliedJobs.find({_id : req.params.applied});
+    
+//     if(applied_jobs.length > 0){
+//         res.send(applied_jobs);
+//     }
+//     else{
+//         res.send({result : "No jobs found"});
+//     }
+// });
+
 
 app.listen(port);
