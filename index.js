@@ -267,16 +267,31 @@ app.post('/studentapply', async(req, res) => {
 });
 
 
-// app.get('/jobs/:applied', async(req,res) => {
-//     const applied_jobs = await AppliedJobs.find({_id : req.params.applied});
+// FETCHING THE JOBS APPLIED BY THE STUDENTS TO STUDENT DASHBOARD
+app.get('/applydjobs/:applied', async(req,res) => {
+    const applied_jobs = await AppliedJobs.find({students : req.params.applied}).populate('jobid');
     
-//     if(applied_jobs.length > 0){
-//         res.send(applied_jobs);
-//     }
-//     else{
-//         res.send({result : "No jobs found"});
-//     }
-// });
+    if(applied_jobs.length > 0){
+        res.send(applied_jobs);
+    }
+    else{
+        res.send({result : "No jobs found"});
+    }
+});
+
+
+// FETCHING THE JOBS THAT ARE POSTED BY THE COMPANY FROM APPLIED JOBS
+app.get('/compNotify/:compidn', async (req, res) => {
+    const applied_jobs = await AppliedJobs.find({compid : req.params.compidn}).populate('students').populate('jobid');
+
+    if(applied_jobs.length > 0){
+        res.send(applied_jobs);
+    }
+    else{
+        res.send({result : "No jobs found"});
+    }
+
+})
 
 
 app.listen(port);
