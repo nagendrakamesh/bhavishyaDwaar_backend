@@ -77,7 +77,7 @@ app.get('/jobs/:comp', async(req,res) => {
         res.send(jobs);
     }
     else{
-        res.send({result : "No jobs found"});
+        res.send("error");
     }
 });
 
@@ -160,6 +160,7 @@ const updateCompany = async (_id, name1, email1, phone1, location1, logo1, passw
                 password : password1
             }
         });
+
         
     }
     catch(err){
@@ -266,7 +267,7 @@ app.post('/studentapply', async(req, res) => {
 });
 
 
-// REMOVE STUDENT ID TO APPLIED JOBM (WITHDRAW JOB APPLICATION)
+// REMOVE STUDENT ID FROM APPLIED JOBS (WITHDRAW JOB APPLICATION)
 app.post('/studentwithdraw', async(req, res) => {
     const id = req.body.jid;
     const sid = req.body.stid;
@@ -304,9 +305,9 @@ app.get('/applydjobs/:applied', async(req,res) => {
 });
 
 
-// FETCHING THE JOBS THAT ARE POSTED BY THE COMPANY FROM APPLIED JOBS
+// FETCHING THE STUDENT APPLICANTS WHO APPLIED TO JOBS THAT ARE POSTED BY THE COMPANY FROM APPLIED JOBS
 app.get('/compNotify/:compidn', async (req, res) => {
-    const applied_jobs = await AppliedJobs.find({compid : req.params.compidn}).populate('students').populate('jobid');
+    const applied_jobs = await AppliedJobs.find({compid : req.params.compidn}).populate('students').populate('jobid').populate('accepted');
 
     if(applied_jobs.length > 0){
         res.send(applied_jobs);
@@ -315,6 +316,111 @@ app.get('/compNotify/:compidn', async (req, res) => {
         res.send('error');
     }
 
+});
+
+
+// DELETING THE JOBS POSTED BY THE COMPANY
+app.delete("/deletejob/:id", async (req, res) => {
+    
+        let finding = await JobsPosted.find({_id : req.params.id});
+        if(finding) {
+            let result1 = await JobsPosted.deleteOne({_id : req.params.id});
+            let result2 = await AppliedJobs.deleteOne({jobid : req.params.id});
+            res.send(result1);
+        }
+        else{
+            res.send('error');
+        }
+    
+    
+});
+
+
+// DECLINING THE STUDENT JOB REQUEST (REMOVING STUDENT ID FROM STUDENTS ARRAY)
+app.post('/decline', async (req, res) => {
+
+    const id = req.body.jid;
+    const sid = req.body.stid;
+
+    try{
+        await AppliedJobs.findOneAndUpdate({jobid : id}, {
+            $pull : {students : sid}
+        }
+        , (err, doc) => {
+            if(err){
+                throw(err);
+            }
+            else{
+                res.json(doc);
+            }
+        })   
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+// ACCEPTING STUDENT APPLICATION (ADDING STUDENT ID TO ACCEPTED ARRAY IN APPLIED JOBS)
+app.post('/accept', async(req, res) => {
+    const id = req.body.jid;
+    const sid = req.body.stid;
+
+    try{
+        await AppliedJobs.findOneAndUpdate({jobid : id}, {
+            $addToSet : {accepted : sid},
+            $pull : {students : sid}
+        }, {new : true}, (err, doc) => {
+            if(err){
+                throw(err);
+            }
+            else{
+                res.json(doc);
+            }
+        })
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+// REMOVING STUDENT ID FROM ACCEPTED ARRAY
+app.post('/remove', async(req, res) => {
+    const id = req.body.jid;
+    const sid = req.body.stid;
+
+    try{
+        await AppliedJobs.findOneAndUpdate({jobid : id}, {
+            $pull : {accepted : sid},
+        }, {new : true}, (err, doc) => {
+            if(err){
+                throw(err);
+            }
+            else{
+                res.json(doc);
+            }
+        })
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+// FETCHING THE JOBS IN WHICH STUDENT WAS SELECTED IN A COMPANY
+app.get('/selected/:selected', async(req,res) => {
+    const applied_jobs = await AppliedJobs.find({accepted : req.params.selected}).populate('jobid');
+    
+    if(applied_jobs.length > 0){
+        res.send(applied_jobs);
+    }
+    else{
+        res.send('error');
+    }
 });
 
 
