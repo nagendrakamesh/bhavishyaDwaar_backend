@@ -175,24 +175,23 @@ app.post('/editstudpswd', async(req, res) => {
     const password = req.body.password;
 
 
-    editStudPswd(_id, password);
-
-});
-
-// FUNCTION FOR UPDATING STUDENT PASSWORD
-const editStudPswd = async (_id, password1) => {
     try{
         await Student.updateOne({_id}, {
             $set : {
-                password : password1
+                password : password
             }
+        }, (err, doc) => {
+            if(err) throw(err);
+            else res.json(doc);
         });
         
     }
     catch(err){
         console.log(err);
     }
-}
+
+});
+
 
 
 // EDITING AND UPDATING THE COMPANY PASSWORD 
@@ -202,24 +201,24 @@ app.post('/editcomppswd', async(req, res) => {
     const password = req.body.password;
 
 
-    editCompPswd(_id, password);
 
-});
-
-// FUNCTION FOR UPDATING COMPANY PASSWORD
-const editCompPswd = async (_id, password1) => {
     try{
         await Company.updateOne({_id}, {
             $set : {
-                password : password1
+                password : password
             }
+        }, (err, doc) => {
+            if(err) throw(err);
+            else res.json(doc);
         });
         
     }
     catch(err){
         console.log(err);
     }
-}
+
+});
+
 
 
 // FETCHING COMPANY DETAILS FOR COMPANY LIST
@@ -250,8 +249,33 @@ app.post('/studentapply', async(req, res) => {
 
     try{
         await AppliedJobs.findOneAndUpdate({jobid : id}, {
-            $push : {students : sid}
+            $addToSet : {students : sid}
         }, {new : true}, (err, doc) => {
+            if(err){
+                throw(err);
+            }
+            else{
+                res.json(doc);
+            }
+        })   
+        
+    }
+    catch(err){
+        console.log(err);
+    }
+});
+
+
+// REMOVE STUDENT ID TO APPLIED JOBM (WITHDRAW JOB APPLICATION)
+app.post('/studentwithdraw', async(req, res) => {
+    const id = req.body.jid;
+    const sid = req.body.stid;
+
+    try{
+        await AppliedJobs.findOneAndUpdate({jobid : id}, {
+            $pull : {students : sid}
+        }
+        , (err, doc) => {
             if(err){
                 throw(err);
             }
@@ -275,7 +299,7 @@ app.get('/applydjobs/:applied', async(req,res) => {
         res.send(applied_jobs);
     }
     else{
-        res.send({result : "No jobs found"});
+        res.send('error');
     }
 });
 
@@ -288,10 +312,10 @@ app.get('/compNotify/:compidn', async (req, res) => {
         res.send(applied_jobs);
     }
     else{
-        res.send({result : "No jobs found"});
+        res.send('error');
     }
 
-})
+});
 
 
 app.listen(port);
