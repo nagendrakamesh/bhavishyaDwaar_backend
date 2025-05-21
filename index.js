@@ -1,10 +1,12 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require("cors");
+const bcrypt = require("bcryptjs");
 require('./db/config');
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT;
 
 const Student = require('./db/Students');
 
@@ -21,6 +23,8 @@ app.use(cors());
 
 // POSTING STUDENT DETAILS FROM STUDENT REGISTER PAGE TO THE DATABASE
 app.post('/registerStudent', async(req,res) => {
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
     let user = new Student(req.body);
     let result = await user.save();
     result = result.toObject();
@@ -31,6 +35,8 @@ app.post('/registerStudent', async(req,res) => {
 
 // POSTING COMPANY DETAILS FROM COMPANY REGISTER PAGE TO THE DATABASE
 app.post('/registerCompany', async(req,res) => {
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
     let user = new Company(req.body);
     let result = await user.save();
     result = result.toObject();
@@ -42,19 +48,23 @@ app.post('/registerCompany', async(req,res) => {
 // LOGIN BACKEND FUNCTIONALITY
 app.post('/login', async(req, res) => {
     if(req.body.password && req.body.email){
-    let user = await Student.findOne(req.body).select("-password");
-    if(user){
-        res.send(user);
-    }
-    else{
-        let comp = await Company.findOne(req.body).select("-password");
-        if(comp){
-            res.send(comp);
+        let email = req.body.email;
+        let user = await Student.findOne({email : email});
+        if(user && (await bcrypt.compare(req.body.password, user.password))){
+            delete user['password'];
+            res.send(user);
         }
         else{
-            res.send("Entered Username or Password is incorrect!");
+            let comp = await Company.findOne({email : email});
+            if(comp && (await bcrypt.compare(req.body.password, comp.password))){
+                delete comp['password'];
+                res.send(comp);
+
+            }
+            else{
+                res.send("Entered Username or Password is incorrect!");
+            }
         }
-    }
     }
     
 });
@@ -174,12 +184,12 @@ app.post('/editstudpswd', async(req, res) => {
     
     const _id = req.body._id;
     const password = req.body.password;
-
+    const salt = await bcrypt.genSalt(10);
 
     try{
         await Student.updateOne({_id}, {
             $set : {
-                password : password
+                password : await bcrypt.hash(password, salt)
             }
         }, (err, doc) => {
             if(err) throw(err);
@@ -200,13 +210,12 @@ app.post('/editcomppswd', async(req, res) => {
     
     const _id = req.body._id;
     const password = req.body.password;
-
-
+    const salt = await bcrypt.genSalt(10);
 
     try{
         await Company.updateOne({_id}, {
             $set : {
-                password : password
+                password : await bcrypt.hash(password, salt)
             }
         }, (err, doc) => {
             if(err) throw(err);
