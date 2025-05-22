@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const express = require('express');
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
+const https = require("https");
+const fs = require("fs");
 require('./db/config');
 
 const app = express();
@@ -433,4 +435,12 @@ app.get('/selected/:selected', async(req,res) => {
 });
 
 
-app.listen(port);
+
+const httpsServer = https.createServer({
+    cert : fs.readFileSync("./certificates/server.crt"),
+    key : fs.readFileSync("./certificates/key.pem")
+}, app)
+
+httpsServer.listen(port, () => {
+    console.log(`Server running at ${port}`);
+})
